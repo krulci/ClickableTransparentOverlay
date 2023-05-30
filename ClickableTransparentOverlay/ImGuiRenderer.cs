@@ -327,7 +327,12 @@
                 }
                 else
                 {
-                    fixed (ushort* p = &fontCustomGlyphRanges[i][0])
+                    ushort[]? fontCustomGlyphRange = fontCustomGlyphRanges[i];
+                    if (fontCustomGlyphRange == null)
+                    {
+                        throw new Exception($"Font Glyph Range is null.");
+                    }
+                    fixed (ushort* p = &fontCustomGlyphRange[0])
                     {
                         io.Fonts.AddFontFromFileTTF(fontPathNames[i], fontSizes[i], config, new IntPtr(p));
                     }
