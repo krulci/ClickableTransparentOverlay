@@ -279,6 +279,67 @@
             ImGuiNative.ImFontConfig_destroy(config);
         }
 
+        public void UpdateFontTextures(string[] fontPathNames, float[] fontSizes, ushort[]?[]? fontCustomGlyphRanges, FontGlyphRangeType[] fontLanguages)
+        {
+            var io = ImGui.GetIO();
+            this.DeRegisterTexture(io.Fonts.TexID)?.Dispose();
+            io.Fonts.Clear();
+
+            for (int i = 0; i < fontPathNames.Length; i++)
+            {
+                var config = ImGuiNative.ImFontConfig_ImFontConfig();
+                config->MergeMode = (byte)((i > 0) ? 1 : 0);
+                if (fontCustomGlyphRanges == null)
+                {
+                    throw new Exception($"Font Glyph Range is null.");
+                }
+                if (fontCustomGlyphRanges[i] == null)
+                {
+                    switch (fontLanguages[i])
+                    {
+                        case FontGlyphRangeType.English:
+                            io.Fonts.AddFontFromFileTTF(fontPathNames[i], fontSizes[i], config, io.Fonts.GetGlyphRangesDefault());
+                            break;
+                        case FontGlyphRangeType.ChineseSimplifiedCommon:
+                            io.Fonts.AddFontFromFileTTF(fontPathNames[i], fontSizes[i], config, io.Fonts.GetGlyphRangesChineseSimplifiedCommon());
+                            break;
+                        case FontGlyphRangeType.ChineseFull:
+                            io.Fonts.AddFontFromFileTTF(fontPathNames[i], fontSizes[i], config, io.Fonts.GetGlyphRangesChineseFull());
+                            break;
+                        case FontGlyphRangeType.Japanese:
+                            io.Fonts.AddFontFromFileTTF(fontPathNames[i], fontSizes[i], config, io.Fonts.GetGlyphRangesJapanese());
+                            break;
+                        case FontGlyphRangeType.Korean:
+                            io.Fonts.AddFontFromFileTTF(fontPathNames[i], fontSizes[i], config, io.Fonts.GetGlyphRangesKorean());
+                            break;
+                        case FontGlyphRangeType.Thai:
+                            io.Fonts.AddFontFromFileTTF(fontPathNames[i], fontSizes[i], config, io.Fonts.GetGlyphRangesThai());
+                            break;
+                        case FontGlyphRangeType.Vietnamese:
+                            io.Fonts.AddFontFromFileTTF(fontPathNames[i], fontSizes[i], config, io.Fonts.GetGlyphRangesVietnamese());
+                            break;
+                        case FontGlyphRangeType.Cyrillic:
+                            io.Fonts.AddFontFromFileTTF(fontPathNames[i], fontSizes[i], config, io.Fonts.GetGlyphRangesCyrillic());
+                            break;
+                        default:
+                            throw new Exception($"Font Glyph Range (${fontLanguages[i]}) is not supported.");
+                    }
+                }
+                else
+                {
+                    fixed (ushort* p = &fontCustomGlyphRanges[i][0])
+                    {
+                        io.Fonts.AddFontFromFileTTF(fontPathNames[i], fontSizes[i], config, new IntPtr(p));
+                    }
+                }
+
+                ImGuiNative.ImFontConfig_destroy(config);
+            }
+
+            this.CreateFontsTexture();
+        }
+
+
         void SetupRenderState(ImDrawDataPtr drawData, ID3D11DeviceContext ctx)
         {
             var viewport = new Viewport(0f, 0f, drawData.DisplaySize.X, drawData.DisplaySize.Y, 0f, 1f);

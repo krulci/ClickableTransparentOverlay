@@ -50,6 +50,12 @@
         private float fontSize;
         private FontGlyphRangeType fontLanguage;
 
+        private bool replaceFonts = false;
+        private ushort[]?[]? fontCustomGlyphRanges;
+        private string[] fontPathNames;
+        private float[] fontSizes;
+        private FontGlyphRangeType[] fontLanguages;
+
         private Dictionary<string, (IntPtr Handle, uint Width, uint Height)> loadedTexturesPtrs;
 
         #region Constructors
@@ -179,6 +185,24 @@
             return true;
         }
 
+        public bool ReplaceFontMultiple(string[] pathNames, float[] sizes, FontGlyphRangeType[] languages)
+        {
+            foreach (string pathName in pathNames)
+            {
+                if (!File.Exists(pathName))
+                {
+                    return false;
+                }
+            }
+
+            this.fontPathNames = pathNames;
+            this.fontSizes = sizes;
+            this.fontLanguages = languages;
+            this.replaceFonts = true;
+            this.fontCustomGlyphRanges = null;
+            return true;
+        }
+
         /// <summary>
         /// Replaces the ImGui font with another one.
         /// </summary>
@@ -197,6 +221,23 @@
             fontSize = size;
             fontCustomGlyphRange = glyphRange;
             replaceFont = true;
+            return true;
+        }
+
+        public bool ReplaceFontMultiple(string[] pathNames, float[] sizes, ushort[][] glyphRanges)
+        {
+            foreach (string pathName in pathNames)
+            {
+                if (!File.Exists(pathName))
+                {
+                    return false;
+                }
+            }
+
+            fontPathNames = pathNames;
+            fontSizes = sizes;
+            fontCustomGlyphRanges = glyphRanges;
+            replaceFonts = true;
             return true;
         }
 
@@ -403,6 +444,7 @@
                 }
 
                 this.ReplaceFontIfRequired();
+                this.ReplaceFontMultipleIfRequired();
             }
         }
 
@@ -412,6 +454,14 @@
             {
                 this.renderer.UpdateFontTexture(this.fontPathName, this.fontSize, this.fontCustomGlyphRange, this.fontLanguage);
                 this.replaceFont = false;
+            }
+        }
+        private void ReplaceFontMultipleIfRequired()
+        {
+            if (this.replaceFonts && this.renderer != null)
+            {
+                this.renderer.UpdateFontTextures(this.fontPathNames, this.fontSizes, this.fontCustomGlyphRanges, this.fontLanguages);
+                this.replaceFonts = false;
             }
         }
 
